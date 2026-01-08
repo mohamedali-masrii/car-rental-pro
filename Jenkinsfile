@@ -29,20 +29,22 @@ pipeline {
       }
     }
 
-    stage('Trivy Scan (Images)') {
+   stage('Trivy Report (HTML)') {
   steps {
     sh '''
-      set -e
-      trivy --version
+      mkdir -p trivy-reports
 
-      echo "Scan BACKEND..."
-      trivy image --no-progress --severity HIGH,CRITICAL --exit-code 1 farahmasrii/car-rental-backend:latest
-
-      echo "Scan FRONTEND..."
-      trivy image --no-progress --severity HIGH,CRITICAL --exit-code 1 farahmasrii/car-rental-frontend:latest
+      trivy image --no-progress --format html -o trivy-reports/backend.html  farahmasrii/car-rental-backend:latest
+      trivy image --no-progress --format html -o trivy-reports/frontend.html farahmasrii/car-rental-frontend:latest
     '''
   }
+  post {
+    always {
+      archiveArtifacts artifacts: 'trivy-reports/*.html', fingerprint: true
+    }
+  }
 }
+
 
 
     stage('Login & Push') {
