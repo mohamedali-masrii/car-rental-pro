@@ -28,6 +28,32 @@ pipeline {
         sh "docker tag car-rental-pro-frontend:latest ${FRONTEND_IMAGE}:latest"
       }
     }
+    stage('Trivy Report (HTML)') {
+  steps {
+    sh '''
+      set -e
+      mkdir -p trivy-reports
+
+      # Télécharger le template HTML officiel Trivy
+      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -o html.tpl
+
+      echo "Generate BACKEND report..."
+      trivy image --no-progress --format template --template "@html.tpl" \
+        -o trivy-reports/backend.html farahmasrii/car-rental-backend:latest
+
+      echo "Generate FRONTEND report..."
+      trivy image --no-progress --format template --template "@html.tpl" \
+        -o trivy-reports/frontend.html farahmasrii/car-rental-frontend:latest
+    '''
+  }
+  post {
+    always {
+      archiveArtifacts artifacts: 'trivy-reports/*.html', fingerprint: true
+    }
+  }
+}
+
+
 
    stage('Trivy Report (HTML)') {
   steps {
