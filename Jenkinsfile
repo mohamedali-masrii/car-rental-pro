@@ -29,6 +29,22 @@ pipeline {
       }
     }
 
+    stage('Trivy Scan (Images)') {
+  steps {
+    sh '''
+      set -e
+      trivy --version
+
+      echo "Scan BACKEND..."
+      trivy image --no-progress --severity HIGH,CRITICAL --exit-code 1 farahmasrii/car-rental-backend:latest
+
+      echo "Scan FRONTEND..."
+      trivy image --no-progress --severity HIGH,CRITICAL --exit-code 1 farahmasrii/car-rental-frontend:latest
+    '''
+  }
+}
+
+
     stage('Login & Push') {
       steps {
         withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDS}", usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
